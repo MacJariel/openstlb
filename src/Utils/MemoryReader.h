@@ -12,48 +12,67 @@
 
 namespace Utils
 {
+	class DataContainer;
 
-class MemoryReader: public IReader
-{
-public:
-	MemoryReader(const uint8_t* data, uint32_t size);
-	virtual ~MemoryReader();
+	class MemoryReader: public IReader
+	{
+	public:
+		MemoryReader(const DataContainer& data);
 
-	/**
-	 * Reads size bytes of data and stores it to buffer.
-	 */
-	virtual IReader& read(uint8_t* buffer, uint32_t size);
+		/**
+		 * Constructs a MemoryReader that can read data from specified data container.
+		 * @param data The container that will be read.
+		 * @param delegateOwnership Whether the container will be moved to the reader.
+		 */
+		MemoryReader(DataContainer&& data, bool moveContainer);
 
-	/**
-	 * Reads size bytes long number in little endian encoding and stores it to buffer.
-	 */
-	virtual IReader& readNumber(uint8_t* buffer, uint32_t size);
+		/**
+		 * Destroys the MemoryReader.
+		 */
+		virtual ~MemoryReader();
 
-	/**
-	 * Returns the position in the read object.
-	 */
-	virtual uint32_t pos() const;
+		/**
+		 * Reads size bytes of data and stores it to buffer.
+		 */
+		virtual IReader& read(uint8_t* buffer, uint32_t size);
 
-	/**
-	 * Sets the position in the read object.
-	 */
-	virtual void setPos(uint32_t newPos);
+		/**
+		 * Reads size bytes of data and returns it in a data container.
+		 * @param size Number of bytes to be read.
+		 * @return A data container
+		 */
+		virtual Utils::DataContainer read(uint32_t size);
 
-	/**
-	 * Skips the next size bytes. Negative number skips backwards.
-	 */
-	virtual void skip(int32_t size);
+		/**
+		 * Reads size bytes long number in little endian encoding and stores it to buffer.
+		 */
+		virtual IReader& readNumber(uint8_t* buffer, uint32_t size);
 
-	/**
-	 * Returns the size of the read object.
-	 */
-	virtual uint32_t size() const;
+		/**
+		 * Returns the position in the read object.
+		 */
+		virtual uint32_t pos() const;
 
-private:
-	const uint8_t* mData;
-	uint32_t mSize;
-	uint32_t mPos;
-};
+		/**
+		 * Sets the position in the read object.
+		 */
+		virtual void setPos(uint32_t newPos);
+
+		/**
+		 * Skips the next size bytes. Negative number skips backwards.
+		 */
+		virtual void skip(int32_t size);
+
+		/**
+		 * Returns the size of the read object.
+		 */
+		virtual uint32_t size() const;
+
+	private:
+		DataContainer* mData;
+		bool mOwnsData;
+		uint32_t mPos;
+	};
 
 }
 #endif /* __MEMORYREADER_H__ */

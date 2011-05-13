@@ -10,8 +10,10 @@
 
 #include <SDL/SDL.h>
 
+using namespace GfxSystem;
+
 SpriteAnimation::SpriteAnimation() :
-	mAnimCount(0), mCurrIdx(0), mData(0)
+	mAnimCount(0)
 {
 }
 
@@ -24,20 +26,23 @@ void SpriteAnimation::init(const IArchive& archive, const string& filename)
 {
 	printf("Loading sprite animation %s.\n", filename.c_str());
 
-	uint32_t size = archive.loadFile(filename, mData);
-	Utils::MemoryReader reader(mData, size);
+	Utils::MemoryReader reader(archive.loadFile(filename), true);
 
 	mAnimCount = reader.readUint8();
 
-	uint32_t framePositions[mAnimCount];
+	uint32_t framePositions[mAnimCount + 1];
 	for (int i = 0; i < mAnimCount; ++i)
 		framePositions[i] = reader.readUint32();
+	framePositions[mAnimCount] = reader.size();
 
 	mSprites.resize(mAnimCount);
 	for (int i = 0; i < mAnimCount; ++i)
 	{
+		reader.setPos(framePositions[i] + 1);
+		Utils::DataContainer data = reader.read(framePositions[i+1] - framePositions[i]);
+
 		mSprites[i] = new Sprite();
-		mSprites[i]->init(mData + framePositions[i] + 1);
+		mSprites[i]->init(data);
 	}
 }
 
@@ -47,7 +52,9 @@ void SpriteAnimation::clear()
 	{
 		delete mSprites[i];
 	}
+}
 
-	delete[] mData;
-	mData = 0;
+void SpriteAnimation::draw(SDL_Surface* screen, int posX, int posY, int level, int offsetX, int offsetY, PaletteFilter* paletteFilter) const
+{
+	mSprites[mAnimData->currentPhase]->draw(screen, posX, posY, level, offsetX, offsetY, paletteFilter);
 }

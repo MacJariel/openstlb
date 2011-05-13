@@ -9,13 +9,9 @@
 #include <cstdio>
 #include <cstring>
 
-const char* FsArchive::smArchiveFilenames[] =
-{ "COMMON", "DEVAST", "MUSIC", "PUST", "RESEARCH", "SAMPLES", "T11", "TEXTS", 0 };
-
 FsArchive::FsArchive(const string& filename) :
-	mFile(0)
+	mFilename(filename), mFile(0)
 {
-	mFilename = "DATA/" + filename + ".FS";
 }
 
 FsArchive::~FsArchive()
@@ -25,7 +21,7 @@ FsArchive::~FsArchive()
 
 void FsArchive::init()
 {
-	printf("Opening %s\n", mFilename.c_str());
+	//printf("Opening %s\n", mFilename.c_str());
 	mFile = fopen(mFilename.c_str(), "rb");
 	fread(&mItemCount, 4, 1, mFile);
 
@@ -57,6 +53,21 @@ int32_t FsArchive::loadFile(const string& filename, uint8_t*& buffer) const
 	fread(buffer, 1, size, file);
 	return size;
 }
+
+Utils::DataContainer FsArchive::loadFile(const string& filename) const
+{
+	FILE* file;
+	uint32_t size;
+	if (!seekFile(filename, file, size))
+	{
+		cerr << "Cannot load file '" << filename << "' in archive '" << mFilename << "'" << endl;
+		return Utils::DataContainer();
+	}
+	uint8_t* buffer = new uint8_t[size];
+	fread(buffer, 1, size, file);
+	return Utils::DataContainer(buffer, size);
+}
+
 
 bool FsArchive::seekFile(const string& name, FILE *& file, uint32_t & size) const
 {

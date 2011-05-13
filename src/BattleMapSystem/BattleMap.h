@@ -15,97 +15,207 @@
 namespace BattleMapSystem
 {
 
-struct AnimItem
-{
-	uint8_t unk1;
-	uint16_t unk2;
-	uint16_t x;
-	uint16_t y;
-	uint16_t idx;
-};
+	typedef uint32_t TileIndex;
 
-class BattleMap
-{
+	class BattleMap
+	{
+	public:
+
+		struct anim_t {
+			uint8_t phaseCount;
+			uint8_t phaseDelay;
+			uint8_t currentPhase;
+			uint8_t currentDelay;
+			uint16_t posX;
+			uint16_t posY;
+			uint16_t graphicsIndex;
+		};
+
+		typedef vector<anim_t> AnimList;
+
+		struct panim_t {
+			uint8_t phaseCount;
+			uint8_t phaseDelay;
+			uint8_t currentPhase;
+			uint8_t currentDelay;
+			uint16_t posX;
+			uint16_t posY;
+			int32_t offsetX;
+			int32_t offsetY;
+			uint16_t graphicsIndex;
+		};
+
+		typedef vector<panim_t> PanimList;
+
+
+		BattleMap();
+
+		virtual ~BattleMap();
+
+		/**
+		 * Initializes the map from the specified .DTA file in the COMMON.FS archive.
+		 * @param filename
+		 */
+		void init(const string& filename);
+
+		string archiveName() const
+		{
+			return string(mArchiveName);
+		}
+
+		uint16_t width() const
+		{
+			return mWidth;
+		}
+
+		uint16_t heigth() const
+		{
+			return mHeight;
+		}
+
+		/** @name Properties of map tiles
+		 * These methods return various properties of tiles at specified index.
+		 */
+		//@{
+
+		/**
+		 * Returns the graphics type of the specified tile.
+		 */
+		int32_t tileGraphicsType(TileIndex index) const;
+
+
+		/**
+		 * Returns the type index of the object on the specified tile, or -1 if
+		 * no object is on the tile.
+		 */
+		int32_t tileObjectType(TileIndex index) const;
+
+		/**
+		 * Returns the level of the specified tile.
+		 */
+		int8_t tileLevel(TileIndex index) const;
+
+		/**
+		 * Returns the type (scope) of the tile.
+		 */
+		int8_t tileType(TileIndex index) const;
+
+		/**
+		 * Returns the energy of the object at the specified tile.
+		 */
+		int8_t tileObjectEnergy(TileIndex index) const;
+
+		/**
+		 * Returns the hardness of the movement at the specified tile.
+		 */
+		int8_t tileMovementHardness(TileIndex index) const;
+
+		/**
+		 * Returns the list of animations on the map.
+		 */
+		const AnimList& animations() const;
+
+		/**
+		 * Returns the list of panimations on the map.
+		 */
+		const PanimList& panimations() const;
+
+
+		//@}
+
+		/** @name Sprite manipulation
+		 * These methods are related to sprites.
+		 */
+		//@{
+
+		/**
+		 * Loads all the graphics that is used in this map.
+		 */
+		void loadGraphics();
+
+		/**
+		 * Unloads all the graphics that is used in this map.
+		 */
+		void unloadGraphics();
+
+		/**
+		 * Returns a tile graphics of given tile.
+		 */
+		GfxSystem::ISprite* tileGraphics(TileIndex tileIndex) const;
+
+		/**
+		 * Returns the graphics of the object on the specified tile, or nullptr if no object is present.
+		 */
+		GfxSystem::ISprite* objectGraphics(TileIndex tileIndex) const;
+
+		/**
+		 * Returns the graphics of the animation at the given index.
+		 */
+		GfxSystem::ISprite* animGraphics(uint32_t index) const;
+
+		/**
+		 * Returns the graphics of the panimation at the given index.
+		 */
+		GfxSystem::ISprite* panimGraphics(uint32_t index) const;
+
+
+		//@}
+
+		inline TileIndex posToTileIndex(uint16_t posX, uint16_t posY)
+		{
+			return posX + posY * mWidth;
+		}
+
+		/**
+		 * Injects a tick to the animation simulation and updates animation structures.
+		 */
+		void injectAnimationTick();
+
+	private:
+
+		struct tile_t
+		{
+			uint16_t graphicsType;
+			uint8_t level;
+			uint8_t type;
+			uint16_t objectIndex;
+			uint8_t objectEnergy;
+			uint8_t movementHardness;
+			bool isPlayerStartLocation;
+		};
+
+		struct special_object_t {
+			string name;
+			uint16_t objectIndex;
+			uint16_t collapseIndex;
+			uint16_t type;
+		};
+
+		string mArchiveName;
+
+		uint16_t mWidth;
+		uint16_t mHeight;
 public:
-	BattleMap();
+		vector<string> mTileGraphicsNames;
+		vector<string> mObjectGraphicsNames;
+		vector<string> mAnimNames;
+		vector<string> mPanimNames;
 
-	virtual ~BattleMap();
+		vector<tile_t> mTiles;
+		vector<special_object_t> mSpecialObjects;
+		AnimList mAnimations;
+		PanimList mPanimations;
+		vector<uint16_t> mStrategyPoints;
 
-	void initFromFile(string fileName);
+		// Graphics
+		typedef vector<GfxSystem::ISprite*> SpriteList;
 
-	string archiveName() const
-	{
-		return string(mArchiveName);
-	}
+		SpriteList mTileGraphics;
+		SpriteList mObjectGraphics;
+		SpriteList mAnimGraphics;
+		SpriteList mPanimGraphics;
 
-	uint16_t width() const
-	{
-		return mWidth;
-	}
-
-	uint16_t heigth() const
-	{
-		return mHeight;
-	}
-
-	inline uint32_t layer1SpriteIdx(uint32_t idx) const
-	{
-		return mLayer1Data[idx] & 0x0FFF;
-		//				mMapData[idx * 2] + 256 * (mMapData[idx * 2 + 1] & 15);
-	}
-
-	inline uint8_t level(uint32_t idx) const
-	{
-		return mLayer1Data[idx] >> 12;
-	}
-
-	const FilenameList& layer1SpriteNames() const
-	{
-		return mSpriteNames[0];
-	}
-	const FilenameList& layer2SpriteNames() const
-	{
-		return mSpriteNames[1];
-	}
-	const FilenameList& animNames() const
-	{
-		return mSpriteNames[2];
-	}
-
-	inline uint16_t layer2SpriteIdx(uint32_t idx) const
-	{
-		return mLayer2Data[idx];
-	}
-
-	uint32_t animCnt() const;
-
-	void animItem(int idx, AnimItem& animItem) const;
-
-private:
-	char mArchiveName[13];
-
-	uint16_t mWidth;
-	uint16_t mHeight;
-
-	FilenameList mSpriteNames[3];
-
-	// Layer 1
-	uint16_t* mLayer1Data;
-
-	// Layer 2
-	uint16_t* mLayer2Data;
-
-	// Animations
-	uint32_t mAnimCnt;
-	uint8_t* mAnimData;
-
-public:
-	// Unknowns
-	uint16_t* mUnk1Data;
-	uint32_t mUnk1Cnt;
-	uint16_t* mUnk2Data;
-	uint32_t mUnk2Cnt;
-
-};
+		static uint8_t smMapFileVersion;
+	};
 }
 #endif /* BATTLEMAP_H_ */

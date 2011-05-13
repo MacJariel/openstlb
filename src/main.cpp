@@ -1,17 +1,24 @@
+#include "Setup/common.h"
+#include "BattleMapSystem/BattleMapGameplay.h"
+
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
-#include <iostream>
+
+#if 0
 #include "GfxSystem/Palette.h"
 #include "GfxSystem/Sprite.h"
 #include "GfxSystem/SpriteAnimation.h"
 #include "BattleMapSystem/BattleMap.h"
-#include "ResourceSystem/Archives/FsArchive.h"
+#include "BattleMapSystem/UnitType.h"
+#include "ResourceSystem/Archives/ArchiveMgr.h"
 #include "Utils/StringConversions.h"
+#include "Utils/LzwCodec.h"
 
 TTF_Font *DEBUG_font;
 
 SDL_Surface* theScreen;
 
+Sprite* s;
 
 void loadPalette(const string& paletteFile, SDL_Surface* surface, int firstcolor)
 {
@@ -28,8 +35,8 @@ void loadPalette(const string& paletteFile, SDL_Surface* surface, int firstcolor
 	SDL_SetPalette(surface, SDL_PHYSPAL, colors, firstcolor, i);
 }
 
-void blitMap(SDL_Surface* screen, BattleMapSystem::BattleMap& battleMap, vector<Sprite*>& layer1Sprites, vector<Sprite*>& layer2Sprites, vector<SpriteAnimation*>& animSprites,
-		int xFrom, int yFrom)
+void blitMap(SDL_Surface* screen, BattleMapSystem::BattleMap& battleMap, vector<Sprite*>& layer1Sprites,
+		vector<Sprite*>& layer2Sprites, vector<SpriteAnimation*>& animSprites, int xFrom, int yFrom)
 {
 	SDL_FillRect(screen, NULL, 0);
 
@@ -47,12 +54,11 @@ void blitMap(SDL_Surface* screen, BattleMapSystem::BattleMap& battleMap, vector<
 		Sprite* sprite = layer1Sprites[battleMap.layer1SpriteIdx(i)];
 
 		PaletteFilter* paletteFilter = 0;
-		/*
-		if (x < 1 || x >= battleMap.width() - 1 || y  < 7 || y >= battleMap.heigth() - 7)
+
+		if (x < 1 || x >= battleMap.width() - 1 || y < 7 || y >= battleMap.heigth() - 7)
 		{
 			paletteFilter = &palettes[pfDarker];
 		}
-		*/
 
 		sprite->draw(screen, x - xFrom, y - yFrom, battleMap.level(i), paletteFilter);
 
@@ -77,13 +83,17 @@ void blitMap(SDL_Surface* screen, BattleMapSystem::BattleMap& battleMap, vector<
 			Sprite* sprite = layer2Sprites[lower];
 			sprite->draw(screen, x - xFrom, y - yFrom, battleMap.level(i));
 		}
+		else
+		{
+			s->draw(screen, x - xFrom, y - yFrom, battleMap.level(i));
+
+		}
 	}
 
 	for (int i = 0; i < battleMap.animCnt(); ++i)
 	{
 		BattleMapSystem::AnimItem animItem;
 		battleMap.animItem(i, animItem);
-
 
 		if (animItem.x < xFrom || animItem.x >= xTo || animItem.y < yFrom || animItem.y >= yTo)
 			continue;
@@ -107,39 +117,49 @@ void blitMap(SDL_Surface* screen, BattleMapSystem::BattleMap& battleMap, vector<
 		//blitTileNumber(screen, posX, posY, x, y, battleMap.level(i), idx);
 		//blitTileNumber(screen, posX, posY, x, y, battleMap.level(i), i);
 
-/*
-		// unk1
-		for (int j = 0; j < battleMap.mUnk1Cnt; ++j)
-		{
-			uint16_t data = *(battleMap.mUnk1Data + j);
-			if (data == i)
-			{
-				char aa[10];
-				sprintf(aa, "U1: %d, %d", i, j);
-				blitTileString(screen, posX, posY, x, y, battleMap.level(i), aa);
-			}
-		}
+		/*
+		 // unk1
+		 for (int j = 0; j < battleMap.mUnk1Cnt; ++j)
+		 {
+		 uint16_t data = *(battleMap.mUnk1Data + j);
+		 if (data == i)
+		 {
+		 char aa[10];
+		 sprintf(aa, "U1: %d, %d", i, j);
+		 blitTileString(screen, posX, posY, x, y, battleMap.level(i), aa);
+		 }
+		 }
 
-		// unk2
-		for (int j = 0; j < battleMap.mUnk2Cnt; ++j)
-		{
-			uint16_t data = *(battleMap.mUnk2Data + j);
-			if (data == i)
-			{
-				char aa[10];
-				sprintf(aa, "U2: %d, %d", i, j);
-				blitTileString(screen, posX, posY, x, y, battleMap.level(i), aa);
-			}
-		}
-*/
+		 // unk2
+		 for (int j = 0; j < battleMap.mUnk2Cnt; ++j)
+		 {
+		 uint16_t data = *(battleMap.mUnk2Data + j);
+		 if (data == i)
+		 {
+		 char aa[10];
+		 sprintf(aa, "U2: %d, %d", i, j);
+		 blitTileString(screen, posX, posY, x, y, battleMap.level(i), aa);
+		 }
+		 }
+		 */
 
 	}
-
+	CyclePalette();
 	SDL_Flip(screen);
 }
+#endif
 
 int main(int argc, char* args[])
 {
+#if 0
+	BattleMapSystem::UnitType::loadUnitTypes();
+	for (int i = 0; i < 87; ++i)
+	{
+		BattleMapSystem::UnitType unitType(i);
+		printf("%2d: %20s %4d %4d\n", i, unitType.name(), (unitType.unk() >> 3) & 1, (unitType.unk() >> 4) & 1);
+	}
+	return 0;
+
 
 	//Start SDL
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -159,7 +179,17 @@ int main(int argc, char* args[])
 		SDL_Quit();
 		exit(1);
 	}
+#endif
 
+	//Start SDL
+	SDL_Init(SDL_INIT_EVERYTHING);
+
+	if (TTF_Init() != 0)
+	{
+		std::cerr << "TTF_Init() Failed: " << TTF_GetError() << std::endl;
+		SDL_Quit();
+		exit(1);
+	}
 
 	////////////////////////
 	// CEGUI initialization
@@ -167,16 +197,22 @@ int main(int argc, char* args[])
 
 	// Init screen
 	SDL_Surface* screen = SDL_SetVideoMode(1024, 768, 8, SDL_HWPALETTE | SDL_HWSURFACE | SDL_DOUBLEBUF);
-	theScreen = screen;
 	if (!screen)
 	{
 		printf("Couldn't set video mode: %s\n", SDL_GetError());
 		exit(-1);
 	}
 
-
 	//SDL_WM_GrabInput(SDL_GRAB_ON);
+	//BattleMapSystem::BattleMapGameplay gameplay("M03_12.DTA");
+	BattleMapSystem::BattleMapGameplay gameplay("M01_01.DTA");
+	//BattleMapSystem::BattleMapGameplay gameplay("M01_01.DTA");
+	//BattleMapSystem::BattleMapGameplay gameplay("M02_02.DTA");
+	gameplay.init();
+	gameplay.loop();
 
+
+#if 0
 	BattleMapSystem::BattleMap battleMap;
 	//battleMap.initFromFile("DATA/common/M03_12.DTA");
 	battleMap.initFromFile("DATA/common/M01_01.DTA");
@@ -187,8 +223,6 @@ int main(int argc, char* args[])
 	loadPalette("UNITS.PAL", screen, 128);
 	loadPalette("SYSTEM.PAL", screen, 224);
 
-
-
 	/*
 	 for (int i = 0; i < 1024*768; ++i) {
 	 *((Uint8*)screen->pixels + i) = i % 256;
@@ -197,10 +231,31 @@ int main(int argc, char* args[])
 	 SDL_Delay(2000);
 	 */
 
-	FsArchive archive(battleMap.archiveName());
-	archive.init();
 
-	LoadPaletteFilter(archive, "DARKER.PAL", palettes[pfDarker]);
+
+	IArchive* envArchive = ArchiveMgr::instance().getArchive(battleMap.archiveName());
+
+	uint8_t* cycleBuffer;
+	envArchive->loadFile("CYCLE.PAL", cycleBuffer);
+	InitPaletteCycling(cycleBuffer);
+	delete cycleBuffer;
+
+	IArchive* unitsArchive = ArchiveMgr::instance().getArchive(ArchiveMgr::T_UNITS);
+	unitsArchive->init();
+	uint8_t* buffer;
+	int32_t size = unitsArchive->loadFile("LPECHF00", buffer);
+	vector<unsigned char> input(buffer, buffer + size);
+	Utils::LzwCodec codec;
+	vector<unsigned char> decoded;
+	codec.decode(input, decoded);
+	uint8_t* vv = new uint8_t[decoded.size()];
+	std::copy(decoded.begin(), decoded.end(), vv);
+	s = new Sprite();
+	s->daFlag = 1;
+	s->init(vv, true);
+
+
+	LoadPaletteFilter(*envArchive, "DARKER.PAL", palettes[pfDarker]);
 
 	// Layer 1
 	const BattleMapSystem::FilenameList& layer1SpriteNames = battleMap.layer1SpriteNames();
@@ -210,7 +265,7 @@ int main(int argc, char* args[])
 	for (int32_t idx = 0; idx < layer1SpriteNames.size(); ++idx)
 	{
 		Sprite* sprite = new Sprite();
-		sprite->init(archive, layer1SpriteNames[idx]);
+		sprite->init(*envArchive, layer1SpriteNames[idx]);
 		layer1Sprites.push_back(sprite);
 	}
 
@@ -222,7 +277,7 @@ int main(int argc, char* args[])
 	for (int32_t idx = 0; idx < layer2SpriteNames.size(); ++idx)
 	{
 		Sprite* sprite = new Sprite();
-		sprite->init(archive, layer2SpriteNames[idx]);
+		sprite->init(*envArchive, layer2SpriteNames[idx]);
 		layer2Sprites.push_back(sprite);
 	}
 
@@ -230,14 +285,12 @@ int main(int argc, char* args[])
 	vector<SpriteAnimation*> animSprites;
 	animSprites.reserve(animSpriteNames.size());
 
-
 	for (int32_t idx = 0; idx < animSpriteNames.size(); ++idx)
 	{
 		SpriteAnimation* spriteAnimation = new SpriteAnimation();
-		spriteAnimation->init(archive, animSpriteNames[idx]);
+		spriteAnimation->init(*envArchive, animSpriteNames[idx]);
 		animSprites.push_back(spriteAnimation);
 	}
-
 
 	// Event loop
 	SDL_Event event;
@@ -276,7 +329,6 @@ int main(int argc, char* args[])
 					break;
 				}
 
-
 				break;
 				//case SDL_KEYUP:
 			case SDL_QUIT:
@@ -286,15 +338,14 @@ int main(int argc, char* args[])
 		}
 
 		// Scrolling
-/*
-		SDL_GetMouseState(&mouseX, &mouseY);
-		if (mouseX < 8) {
-			--x;
-		} else if (mouseX > screen->w - 8) {
-			++x;
-		}
-*/
-
+		/*
+		 SDL_GetMouseState(&mouseX, &mouseY);
+		 if (mouseX < 8) {
+		 --x;
+		 } else if (mouseX > screen->w - 8) {
+		 ++x;
+		 }
+		 */
 
 		SDL_Delay(10);
 		blitMap(screen, battleMap, layer1Sprites, layer2Sprites, animSprites, x, y);
@@ -318,6 +369,10 @@ int main(int argc, char* args[])
 	 SDL_Delay(20);
 	 }
 	 */
+#endif
+
+	//Quit TTF
+	TTF_Quit();
 
 	//Quit SDL
 	SDL_Quit();

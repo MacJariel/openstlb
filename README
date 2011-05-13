@@ -1,1 +1,9 @@
 This is the repository of the OpenSTLB project.
+
+
+How to import project to Eclipse and build it
+----------------------------------------------
+
+1. Simply import project to your workspace (File -> Import -> Existing projects into workspace)
+2. Create Debug and Release folders in the project.
+3. Press Shift + F9 (Project -> Make Target -> Build) and select the build target (CMake Debug or CMake Release). You can of course build both targets.

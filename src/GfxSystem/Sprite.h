@@ -12,33 +12,35 @@
 #include "ISprite.h"
 #include "ResourceSystem/Archives/IArchive.h"
 
-namespace Utils {
-	class MemoryReader;
-}
-
-
 class SDL_Surface;
 
-class Sprite: public ISprite {
-public:
-	Sprite();
-	virtual ~Sprite();
+namespace GfxSystem
+{
 
-	void init(const IArchive& archive, const string& filename);
-	void init(uint8_t* data, bool freeOnClear = false);
-	void clear();
+	class Sprite: public ISprite
+	{
+	public:
+		Sprite();
+		virtual ~Sprite();
 
-	virtual void draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFilter* paletteFilter = 0) const;
+		void init(const IArchive& archive, const string& filename);
+		void init(Utils::DataContainer& data);
+		void clear();
 
-	static void drawText(SDL_Surface* screen, int posX, int posY, int level, const string& text);
+		virtual void draw(SDL_Surface* screen, int posX, int posY, int level, int offsetX, int offsetY, PaletteFilter* paletteFilter = 0) const;
 
-private:
+		static void drawText(SDL_Surface* screen, int posX, int posY, int level, const string& text);
 
-	uint8_t* mData;
-	bool mFreeOnClear;
+		int daFlag;
 
-	string mName;
-	Utils::MemoryReader* mReader;
-};
+	private:
 
+		uint8_t* mData;
+		bool mFreeOnClear;
+
+
+		string mName;
+		Utils::MemoryReader* mReader;
+	};
+}
 #endif /* SPRITE_H_ */

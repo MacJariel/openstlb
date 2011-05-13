@@ -11,33 +11,38 @@
 #include "Setup/common.h"
 #include "Sprite.h"
 
+#include "BattleMapSystem/BattleMap.h" // for anim_t struct (maybe it should be pulled to another header)
+
 #include <vector>
 
-class SpriteAnimation: public ISprite
+namespace GfxSystem
 {
-public:
-	SpriteAnimation();
-	virtual ~SpriteAnimation();
 
-	void init(const IArchive& archive, const string& filename);
-	void clear();
-
-	virtual void draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFilter* paletteFilter = 0) const
+	class SpriteAnimation: public ISprite
 	{
-		mSprites[mCurrIdx]->draw(screen, posX, posY, level);
-	}
+	public:
+		SpriteAnimation();
+		virtual ~SpriteAnimation();
 
-	void next()
-	{
-		mCurrIdx = (mCurrIdx + 1) % mAnimCount;
-	}
+		void init(const IArchive& archive, const string& filename);
+		void clear();
 
-private:
-	uint8_t mAnimCount;
-	uint8_t mCurrIdx;
-	vector<Sprite*> mSprites;
+		virtual void draw(SDL_Surface* screen, int posX, int posY, int level, int offsetX, int offsetY, PaletteFilter* paletteFilter = 0) const;
 
-	uint8_t* mData;
-};
+/*		{
+			mSprites[mCurrIdx]->draw(screen, posX, posY, level);
+		}
+*/
+		void setAnimData(const BattleMapSystem::BattleMap::anim_t* animData)
+		{
+			mAnimData = animData;
+		}
 
+
+	private:
+		uint8_t mAnimCount;
+		vector<Sprite*> mSprites;
+		const BattleMapSystem::BattleMap::anim_t* mAnimData;
+	};
+}
 #endif /* __SPRITEANIMATION_H__ */

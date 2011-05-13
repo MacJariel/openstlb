@@ -12,16 +12,32 @@
 
 class IArchive;
 
-typedef uint8_t PaletteFilter[256];
+namespace GfxSystem
+{
+	class PaletteFilter: public vector<uint8_t>
+	{
+	public:
+		PaletteFilter() :
+			vector<uint8_t> (256)
+		{
+		}
+	};
 
-void LoadPaletteFilter(IArchive& archive, const string& filename, PaletteFilter& filter);
+	//typedef uint8_t PaletteFilter[256];
 
+	void InitPaletteCycling(IArchive& archive, const string& filename);
 
-enum ePaletteFilter {
-	pfDarker = 0,
-	NUM_PALETTE_FILTERS
-};
+	void CyclePalette();
 
-extern PaletteFilter palettes[NUM_PALETTE_FILTERS];
+	void LoadPaletteFilter(IArchive& archive, const string& filename, PaletteFilter& filter);
 
+	void LoadPalette(IArchive& archive, const string& filename, uint8_t from);
+
+	enum ePaletteFilter
+	{
+		pfDarker = 0, NUM_PALETTE_FILTERS
+	};
+
+	extern PaletteFilter palettes[NUM_PALETTE_FILTERS];
+}
 #endif /* __PALETTE_H__ */

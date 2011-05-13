@@ -13,14 +13,22 @@
 
 class SDL_Surface;
 
-class ISprite
+namespace GfxSystem
 {
-public:
-	ISprite()	{}
 
-	virtual ~ISprite() 	{}
+	class ISprite
+	{
+	public:
+		ISprite()
+		{
+		}
 
-	virtual void draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFilter* paletteFilter = 0) const = 0;
-};
+		virtual ~ISprite()
+		{
+		}
 
+		virtual void
+				draw(SDL_Surface* screen, int posX, int posY, int level, int offsetX, int offsetY, PaletteFilter* paletteFilter = 0) const = 0;
+	};
+}
 #endif /* __ISPRITE_H__ */

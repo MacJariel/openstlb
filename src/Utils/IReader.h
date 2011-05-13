@@ -9,6 +9,7 @@
 #define __IREADER_H__
 
 #include "Setup/common.h"
+#include "Utils/DataContainer.h"
 
 namespace Utils
 {
@@ -28,6 +29,13 @@ public:
 	 * Reads size bytes of data and stores it to buffer.
 	 */
 	virtual IReader& read(uint8_t* buffer, uint32_t size) = 0;
+
+	/**
+	 * Reads size bytes of data and returns it in a data container.
+	 * @param size Number of bytes to be read.
+	 * @return Data container with read data.
+	 */
+	virtual DataContainer read(uint32_t size) = 0;
 
 	/**
 	 * Reads size bytes long number in little endian encoding and stores it to buffer.
@@ -94,6 +102,14 @@ public:
 		int32_t res;
 		readNumber((uint8_t*) &res, 4);
 		return res;
+	}
+
+	inline std::string readString(uint32_t size)
+	{
+		char buffer[size + 1];
+		read((uint8_t*)buffer, size);
+		buffer[size] = '\0';
+		return std::string(buffer);
 	}
 
 };

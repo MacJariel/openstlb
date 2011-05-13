@@ -1,0 +1,98 @@
+Faze - 206 bytu
+
+
+43 - Grafika hlavnove jednotky (string)
+
+58 - pokud (x & 7) == 2, nastavi spomalenie_pohybu = 2, jinak spomalenie_pohybu = 1
+   - (& 7) - druh_jednotky
+      - == 0 - bez otocne hlavne   (nerika nic o zarazeni mezi lehke/tezke)
+      - == 1 - s otocnou hlavni    (....)
+      - == 2 - pesi jednotka       (....)
+      - == 7 - letajici jednotka
+   - dale se jednotky deli 
+      - & 0x00010000 -> lehka jednotka
+      - & 0x00100000 -> tezka jednotka
+      - & 0x00000100 -> vzdusna jednotka
+
+
+
+60 - v LoadUnit, bohuzel nemam pseudokod
+
+62 - strength
+
+71 - priznaky utoku (ve WarOnTheMap se testuje & 4)
+
+
+162 - in SvetloJednotky,WarOnTheMap (test, zda == 15), spolu s testem aktualni jednotky vede na zapnuti "kamikaze" cinnosti - urcuje asi specialni utok, zda jde o vzletnuti/pristani, nebo treba paralizaci
+   - pokud < 2 -> zavola se AplikujSpecialniUtok, jinak transformace jednotky
+   - k cemu hodnota presne je, zatim nevim
+   - pri testu == 4 nastavi vnaranie_sa_cinnost = 1
+   - pri testu == 15, pokud jednotky_data[95] != 0 -> kamikaze_cinnost misto utok_cinnost
+   - nasel sem test, kdy < 7 -> AplikujSpecialniUtok
+   - vypada to, ze == 7 -> "fly unit -> transform finished", == 8 -> "land unit -> start"
+   - v LoadUnits se promenna jmenuje priznaky
+
+
+164 - in WarOnTheMap (s 824, strcpy), string se pak posila do LoadUnitAnim, ale mam podezreni, ze se to snad nikdy nevola, tedy neco zastaraleho.. ale kdo vi- rozhodne spojene s vnaraniem
+170 - in WarOnTheMap - vnaranie_faza (vnaranie_pocet_faz)
+    - v LoadUnit se z toho pocita promenna "znak"
+
+171 - cena AP za specialni utok - old: in WarOnTheMap - spojene s pristavanim/vzletanim - nastavuje se do jednotky_data[54]
+174 - in WarOnTheMap - posila se do TransformUnitToType (nejspis pristavani/vznaseni) - POTVRZENO
+
+176 
+177 - in WarOnTheMap -> jednotky_data[49] - 1
+
+
+
+hromada veci se kopiruje (zatim jen pri vzletani) do jednotky_data:
+
+58 -> 62
+18 -> 55
+61 -> 56
+63 -> 43
+16 -> 44
+65 -> 45
+66 -> 46
+67 -> 47
+17 -> 51
+175 -> 42
+70 -> 50
+
+
+
+
+
+jednotky_data: (faze 12673)
+
+  30 - asi priznak, zda je jednotka nahrana, pokud je 0, vola se LoadUnit()
+
+  33 - nastavi se na 0x20 po pristani/vzletnuti - asi vic vyznamu, pred a po utoku se xoruje s 0x01 u utocici jednotky
+  37 - ?? 
+  38 - ...
+
+  54 - nejspis aktualni pocet akcnich bodu - (old: nastavuje se z typ[171], nekdy se typ[171] od toho odcita)
+  55 - cena AP za utok
+  62 - if jednotky_data[12673 * aktualna_jednotka + 62] & 4  ->  vzdusna jednotka - (typ jednotky = var & 7) - druh jednotky (pesi, tank, letecka) (viz jednotky.def[58])
+
+  71 - akt_osob
+  72 - akt_raneny
+  73 - akt_poskodenie - tady se pocitaji straty jednotky (*10), kdyz prerostou 1000, tak se neco stane
+  74 - ...
+  
+
+
+  95 - neco s kamikaze cinnosti (a jednotky.def[162])
+
+
+  109 - pos_x
+  110 - ...
+  111 - pos_y
+  111 - ...
+
+  5053 - naka grafika jednotky
+
+
+pole mapa[] (velikost polozky 14 slov, tedy 24 bytu), indexovano po slovech
+  4 - typ_policka = HIBYTE(var)
+  5 - uroven policka = 128 - LOBYTE(var)

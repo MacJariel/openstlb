@@ -12,12 +12,25 @@
 
 #include <SDL/SDL_ttf.h>
 
+using namespace GfxSystem;
+
+struct point_t {
+	int8_t x;
+	int8_t y;
+};
+
+point_t posunPostavicky[] = {
+		{0, 0}, {8, -8}, {-9, 8}, {-10, -8}, {10, 8}, {0, -10}, {13, -21}, {-10, -2}, {-12, -25}, {13, 0}
+
+};
+
+
 extern SDL_Surface* theScreen; // to be removed
 
 extern TTF_Font *DEBUG_font;
 
 Sprite::Sprite() :
-	mData(0), mReader(0)
+	daFlag(0), mData(0), mReader(0)
 {
 
 }
@@ -29,18 +42,13 @@ Sprite::~Sprite()
 
 void Sprite::init(const IArchive& archive, const string& filename)
 {
-	FILE* src;
 	mName = filename;
-	archive.loadFile(filename, mData);
-	mFreeOnClear = true;
-	mReader = new Utils::MemoryReader(mData, 0);
+	mReader = new Utils::MemoryReader(archive.loadFile(filename), true);
 }
 
-void Sprite::init(uint8_t* data, bool freeOnClear)
+void Sprite::init(Utils::DataContainer& data)
 {
-	mData = data;
-	mFreeOnClear = freeOnClear;
-	mReader = new Utils::MemoryReader(mData, 0);
+	mReader = new Utils::MemoryReader(data, true);
 }
 
 void Sprite::clear()
@@ -55,25 +63,52 @@ void Sprite::clear()
 	mReader = 0;
 }
 
-void Sprite::draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFilter* paletteFilter) const
+void Sprite::draw(SDL_Surface* screen, int posX, int posY, int level, int offsetX, int offsetY, PaletteFilter* paletteFilter) const
 {
 	mReader->setPos(0);
 	uint16_t height = mReader->readUint16();
-	mReader->skip(2); // type of field (1 - 13), not necessary now
-	int16_t offsetY = mReader->readInt16();
-	mReader->skip(2); // unknown value, maybe two values
+
+	if (daFlag == 0)
+	{
+		//mReader->skip(2); // type of field (1 - 13), not necessary now
+		int something = mReader->readUint16();
+	}
+
+	//	int16_t offsetY = mReader->readInt16();
+	offsetY += mReader->readInt16();
+
+	if (daFlag != 0)
+	{
+		//cout << offsetY << endl;
+		offsetY -= 127;
+		cout << offsetY << endl;
+	}
+
+	if (daFlag == 0)
+		mReader->skip(2); // unknown value, maybe two values
 
 	int baseX = -40 + posX * 80 + ((posY + 1) % 2) * 40;
 	int baseY = -24 + posY * 24 + offsetY - level * 18;
+	if (daFlag)
+	{
+		uint8_t* start = (uint8_t*) screen->pixels + (baseY * screen->w) + baseX - 2;
+		for (int i = 0; i < 5; ++i)
+			start[i] = 250;
+
+	}
+
+
+	if (daFlag)
+		baseY += 12;
 
 	for (int y = 0; y < height; ++y)
 	{
-		uint16_t offsetX = mReader->readUint16();
+		uint16_t lineOffsetX = mReader->readUint16();
 
 		uint8_t fullChunkCount = mReader->readUint8();
 		uint8_t partialChunkCount = mReader->readUint8();
 
-		int screenX = baseX + offsetX;
+		int screenX = baseX + offsetX + lineOffsetX;
 		int screenY = baseY + y;
 
 		if (screenY < 0 || screenY >= screen->h)
@@ -84,7 +119,6 @@ void Sprite::draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFil
 
 		uint32_t linePos = mReader->pos();
 		uint8_t* screenLine = (uint8_t*) screen->pixels + (screenY * screen->w);
-
 
 		for (int i = 0; i < fullChunkCount * 4; ++i)
 		{
@@ -100,7 +134,24 @@ void Sprite::draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFil
 			}
 			else
 			{
-				screenLine[screenX + i] = paletteFilter ? (*paletteFilter)[mReader->readUint8()] : mReader->readUint8();
+				uint8_t x = mReader->readUint8();
+				//if (daFlag == 0) {
+					screenLine[screenX + i] = paletteFilter ? (*paletteFilter)[x] : x;
+				/*
+				} else {
+					//if (x >= 0x1a && x <= 0x26)
+					//if (x == 0x8C)
+					//if (x > 0x82 && x < 0x91)
+					if (x >= 0x80 && x < 0xFD )
+					{
+						screenLine[screenX + i] = x;
+					}
+					else
+					{
+						screenLine[screenX + i] += x;
+					}
+				}
+				*/
 			}
 		}
 		screenX += fullChunkCount * 4;
@@ -115,12 +166,12 @@ void Sprite::draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFil
 			{
 				if (!mask[j] && screenX + i >= 0 && screenX + i < screen->w)
 				{
-					screenLine[screenX + j] = paletteFilter ? (*paletteFilter)[data[j]] : data[j];
+					if (daFlag == 0)
+						screenLine[screenX + j] = paletteFilter ? (*paletteFilter)[data[j]] : data[j];
 				}
 			}
 			screenX += 4;
 		}
-
 
 		/*
 		 int skipPixels = screenX < 0 ? -screenX : 0;
@@ -159,7 +210,7 @@ void Sprite::draw(SDL_Surface* screen, int posX, int posY, int level, PaletteFil
 		 }
 		 screenLine += 4;
 		 }
-		*/
+		 */
 	}
 }
 
@@ -167,6 +218,13 @@ void Sprite::drawText(SDL_Surface* screen, int posX, int posY, int level, const 
 {
 	static SDL_Color color =
 	{ 255, 255, 255, 0 };
+
+	static TTF_Font* DEBUG_font = TTF_OpenFont("arial.ttf", 12);
+	if (DEBUG_font == NULL)
+	{
+		std::cerr << "TTF_OpenFont() Failed: " << TTF_GetError() << std::endl;
+		return;
+	}
 
 	int baseX = -40 + posX * 80 + ((posY + 1) % 2) * 40 + 38;
 	int baseY = -24 + posY * 24 - level * 18 + 16;
@@ -177,8 +235,12 @@ void Sprite::drawText(SDL_Surface* screen, int posX, int posY, int level, const 
 	TTF_SizeText(DEBUG_font, text.c_str(), &textWidth, &textHeight);
 	SDL_Surface *sText = TTF_RenderText_Solid(DEBUG_font, text.c_str(), color);
 
-	SDL_Rect dest_rect =
-	{ baseX - textWidth / 2, baseY - textHeight / 2, sText->w, sText->h };
+	SDL_Rect dest_rect;
+	dest_rect.x = baseX - textWidth / 2;
+	dest_rect.y = baseY - textHeight / 2;
+	dest_rect.w = sText->w;
+	dest_rect.h = sText->h;
 	SDL_BlitSurface(sText, NULL, screen, &dest_rect);
 	SDL_FreeSurface(sText);
 }
+

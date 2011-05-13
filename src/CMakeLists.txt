@@ -2,6 +2,9 @@ project (openstlb)
 
 cmake_minimum_required(VERSION 2.6)
 
+# FIXME: find a way to make this portable
+add_definitions(-std=c++0x)
+
 find_package (SDL 1.2 REQUIRED)
 #find_package (SDL_image 1.2 REQUIRED)
 
@@ -27,11 +30,21 @@ set(SRCS
   main.cpp
   BattleMapSystem/BattleMap.cpp
   BattleMapSystem/BattleMapStructures.cpp
+  BattleMapSystem/BattleMapGameplay.cpp
+  BattleMapSystem/UnitType.cpp
+  BattleMapSystem/Units.cpp
   GfxSystem/Palette.cpp
   GfxSystem/Sprite.cpp
   GfxSystem/SpriteAnimation.cpp
+  GfxSystem/SpritePanimation.cpp
+  ResourceSystem/Archives/ArchiveMgr.cpp
   ResourceSystem/Archives/FsArchive.cpp
+  ResourceSystem/Archives/FsuArchive.cpp
+  Utils/DataContainer.cpp
   Utils/MemoryReader.cpp
+  Utils/Lzw.cpp
+  Utils/LzwCodec.cpp
+ 
 )
 
 include_directories (

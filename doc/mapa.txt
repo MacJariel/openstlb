@@ -1,0 +1,7 @@
+cisloSpiny:
+ - kdyz se rusi most:
+     if ((mapa[n].cisloSpiny & 0xF800) == 0x7000)
+     	mapa[n].cisloSpiny = 0x6000;
+ - posila se cisloSpiny & 0xF800 do VratCiNeprekazi jako 2. arg
+ - ve SvetloJednotky se vola ZosvetliDom, pokud x = cisloSpiny & 0xF800 a ( x >= 0x1000) && (x <= 0x3000)  
+ 

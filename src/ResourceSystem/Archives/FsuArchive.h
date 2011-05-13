@@ -1,24 +1,21 @@
 /*
- * FsArchive.h
+ * FsuArchive.h
  *
- *  Created on: 4.4.2011
+ *  Created on: 15.4.2011
  *      Author: macjariel
  */
 
-#ifndef __FSARCHIVE_H__
-#define __FSARCHIVE_H__
+#ifndef __FSUARCHIVE_H__
+#define __FSUARCHIVE_H__
 
 #include "Setup/common.h"
 #include "IArchive.h"
 
-class FsArchive: public IArchive
+class FsuArchive: public IArchive
 {
 public:
-
-	static const char* smArchiveFilenames[];
-
-	FsArchive(const string& filename);
-	virtual ~FsArchive();
+	FsuArchive(const string& filename);
+	virtual ~FsuArchive();
 
 	virtual void init();
 
@@ -32,9 +29,7 @@ private:
 	string mFilename;
 	FILE* mFile;
 
-	uint32_t mItemCount;
-	char* mItemList;
-
+	Utils::MemoryReader* mDirectoryReader;
 };
 
-#endif /* __FSARCHIVE_H__ */
+#endif /* __FSUARCHIVE_H__ */
